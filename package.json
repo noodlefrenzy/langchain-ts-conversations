@@ -28,7 +28,8 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.0.3",
-    "langchain": "^0.0.39"
+    "langchain": "^0.0.39",
+    "word-wrap": "^1.2.3"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
