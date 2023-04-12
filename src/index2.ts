@@ -4,13 +4,11 @@ import wrap from "word-wrap";
 import { OpenAI } from "langchain";
 import { ConversationChain } from "langchain/chains";
 import { BaseLLM } from "langchain/llms";
-import { PromptTemplate } from "langchain/prompts";
 
 dotenv.config();
 
 class Conv {
   chain: ConversationChain;
-  
   lastResponse: string;
 
   constructor(chain: ConversationChain, lastResponse: string) {
@@ -30,14 +28,18 @@ async function prime_chain(model: BaseLLM, initial_prompt: string) {
   return new Conv(chain, (await chain.call({ input: initial_prompt })).response);
 }
 
-const person1 = { person: 'Noam Chomsky', details: 'renowned linguist' };
-const person2 = { person: 'Yann LeCun', details: 'one of the creators of Deep Learning' };
 const num_turns = 5;
 
-const initial_prompt = new PromptTemplate({ template: "Please converse with me as if you are {person}, {details}. Say 'yes' if you agree.", inputVariables: ['person', 'details'] });
+const solver = 'I will give you a problem to think about and you will try and solve it.' +
+    ' Restate the problem, then think step by step and come up with the correct solution.' +
+    ' I will respond to you and either point out issues or counterexamples, or tell you that you are correct.' +
+    ' If you are correct, say "Problem solved."';
+const critic = 'I will give you a problem and a potential solution.' +
+    " You will find any issues or counterexamples that you can think of, or if I'm correct you will tell me so." +
+    ' If I say "Problem solved." you will stop looking for issues and say "Problem solved." as well';
 
-const c1 = await prime_chain(model, await initial_prompt.format(person1));
-const c2 = await prime_chain(model, await initial_prompt.format(person2));
+const c1 = await prime_chain(model, solver);
+const c2 = await prime_chain(model, critic);
 
 async function logres(person: string, res: string) {
   const wrappedRes = wrap(res, { indent: '  ', width: 100 });
@@ -45,20 +47,23 @@ async function logres(person: string, res: string) {
   console.log(wrappedRes);
 }
 
-await logres(person1.person, c1.lastResponse);
-await logres(person2.person, c2.lastResponse);
+await logres('solver', c1.lastResponse);
+await logres('critic', c2.lastResponse);
 
 async function turn(chain1: Conv, chain2: Conv, conversation_starter?: string) {
   const res1 = await chain1.chain.call({ input: conversation_starter ?? chain2.lastResponse });
   const res2 = await chain2.chain.call({ input: res1.response });
-  await logres(person1.person, res1.response);
-  await logres(person2.person, res2.response);
+  await logres('solver', res1.response);
+  await logres('critic', res2.response);
   chain1.lastResponse = res1.response;
   chain2.lastResponse = res2.response;
 }
 
-let conversation_starter = 'People are arguing over whether large language models are just glorified autocomplete or whether they are displaying emergent properties of thought, world models, etc. What do you think about it?';
-for (let i = 0; i < num_turns; i++) {
+let conversation_starter = 'People are arguing over whether large language models are just glorified autocomplete' +
+    ' or whether they are displaying emergent properties of thought, world models, etc.' +
+    ' What experiments would you run to find out which is true?';
+
+for (let i = 0; i < num_turns; i += 1) {
   await turn(c1, c2, i === 0 ? conversation_starter : undefined);
 }
 console.log('=== Conversation complete ===');
