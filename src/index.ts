@@ -53,12 +53,14 @@ async function turn(chain1: Conv, chain2: Conv, conversation_starter?: string) {
   const res2 = await chain2.chain.call({ input: res1.response });
   await logres(person1.person, res1.response);
   await logres(person2.person, res2.response);
+  // eslint-disable-next-line no-param-reassign
   chain1.lastResponse = res1.response;
+  // eslint-disable-next-line no-param-reassign
   chain2.lastResponse = res2.response;
 }
 
-let conversation_starter = 'People are arguing over whether large language models are just glorified autocomplete or whether they are displaying emergent properties of thought, world models, etc. What do you think about it?';
-for (let i = 0; i < num_turns; i++) {
+const conversation_starter = 'People are arguing over whether large language models are just glorified autocomplete or whether they are displaying emergent properties of thought, world models, etc. What do you think about it?';
+for (let i = 0; i < num_turns; i += 1) {
   await turn(c1, c2, i === 0 ? conversation_starter : undefined);
 }
 console.log('=== Conversation complete ===');

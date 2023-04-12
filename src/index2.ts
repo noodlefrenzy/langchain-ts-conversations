@@ -9,6 +9,7 @@ dotenv.config();
 
 class Conv {
   chain: ConversationChain;
+
   lastResponse: string;
 
   constructor(chain: ConversationChain, lastResponse: string) {
@@ -55,11 +56,13 @@ async function turn(chain1: Conv, chain2: Conv, conversation_starter?: string) {
   const res2 = await chain2.chain.call({ input: res1.response });
   await logres('solver', res1.response);
   await logres('critic', res2.response);
+  // eslint-disable-next-line no-param-reassign
   chain1.lastResponse = res1.response;
+  // eslint-disable-next-line no-param-reassign
   chain2.lastResponse = res2.response;
 }
 
-let conversation_starter = 'People are arguing over whether large language models are just glorified autocomplete' +
+const conversation_starter = 'People are arguing over whether large language models are just glorified autocomplete' +
     ' or whether they are displaying emergent properties of thought, world models, etc.' +
     ' What experiments would you run to find out which is true?';
 
